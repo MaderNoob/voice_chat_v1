@@ -8,4 +8,6 @@ edition = "2018"
 
 [dependencies]
 cpal = "0.13.1"
-taken = "0.1.1"
+text_io = "0.1.8"
+num_enum = "0.5.1"
+libc = "0.2.81"

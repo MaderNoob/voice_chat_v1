@@ -1,0 +1,62 @@
+alice
+
+bob
+
+
+
+
+
+alice wants to voice chat bob
+bob has a udp socket waiting for messages from any endpoint
+alice sends voice chat request by sending 1 byte to bobs endpoint
+show bob the incoming request and ask him to verify the call, from here comes the idea for contacts
+
+
+contacts:
+	dictionary mapping endpoints to names
+	stored on hard drive
+	encryption?
+
+change in protocol:
+
+each client can be in 1 conversation at most at any given moment,
+in other words every client has 2 states:
+	waiting for conversation
+	in conversation (including the time that the client spends while waiting for connection response)
+to start conversation we send one zero byte to the contact we want to talk to
+seems like we need to define a handshake, but this wil be done later, so for now
+the client that receives the conversation request lets the user decide wether to accept it or not,
+if yes, send a one byte and the port of the audio stream socket
+if not, send a zero byte
+
+note: 
+	if the client agrees to the conversation he opens a new udp socket for the audio stream with a random port and sends this port with the conversation approval message
+
+when the requester receives the yes response he creates an audio stream socket with a random port and sends it to the other client
+
+once a client has the audio stream port of the other client and has sent his port he starts the input and output audio streams over the sockets
+
+the control conversation can be used to pass messages and to send control messages like conversation end messages
+
+
+new conecpt: status request
+	see the status of a contact without initiating a conversation request
+	to do this, we change the protocol so that the first byte that is sent is
+	a request code which currently only has two options:
+		- initiate conversation
+		- get status
+	if a client receives a get status request he must send back a single byte which currently doesn't represent anything
+
+
+
+
+code perspective:
+	use multithreading or async rust (tokio::UdpSocket)?
+	in case we are using multithreading, we need:
+		- one thread reading from stdin (main thread)
+		- one thread reading from control socket (control thread)
+		- one thread for audio stream (audio thread)
+	problem:
+		we want the control thread to also receive messages from the main thread,
+		for example when the user presses q during connection we want the control thread
+		to stop connecting

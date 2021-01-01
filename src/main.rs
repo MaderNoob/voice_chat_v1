@@ -3,15 +3,24 @@ use cpal::{
     traits::{DeviceTrait, HostTrait, StreamTrait},
     SampleFormat,
 };
-use std::sync::{Arc, Mutex};
-use taken;
-use taken::take;
-
-mod audio;
+use std::io::Read;
+use std::net::UdpSocket;
+use std::{
+    io::stdin,
+    net::SocketAddr,
+    sync::{Arc, Mutex},
+    thread::spawn,
+};
+mod control;
 
 fn main() {
-    // main_channels();
-    main_mutex();
+    spawn(control_thread);
+    let _ = stdin().read(&mut [0u8; 1]).unwrap();
+    ()
+}
+
+fn control_thread() {
+    
 }
 
 fn main_channels() {
@@ -107,7 +116,7 @@ fn main_mutex() {
     let outconfig = outdevice.default_output_config().unwrap();
 
     let read_time_clone = Arc::clone(&total_read_time);
-    let outstream_buf=Arc::clone(&shared_buf);
+    let outstream_buf = Arc::clone(&shared_buf);
 
     let outstream = outdevice
         .build_output_stream(
@@ -115,8 +124,8 @@ fn main_mutex() {
             move |data: &mut [f32], info| {
                 let timer = std::time::Instant::now();
                 {
-                    let mut buf=outstream_buf.lock().unwrap();
-                    if buf.len()>=data.len(){
+                    let mut buf = outstream_buf.lock().unwrap();
+                    if buf.len() >= data.len() {
                         data.copy_from_slice(&buf[..data.len()]);
                         buf.drain(0..data.len());
                         // for (index,sample) in buf.drain(0..data.len()).enumerate(){
